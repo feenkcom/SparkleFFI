@@ -1,10 +1,10 @@
 Class {
-	#name : #GciInterfaceTest,
-	#superclass : #GemStoneFFITestCase,
-	#category : #'GemStoneFFI-Tests'
+	#name : 'GciInterfaceTest',
+	#superclass : 'GemStoneFFITestCase',
+	#category : 'GemStoneFFI-Tests'
 }
 
-{ #category : #tests }
+{ #category : 'tests' }
 GciInterfaceTest >> testAsLocalObject [
 
 self 
@@ -13,6 +13,6 @@ self
 	assert: (GciInterface oopIsSmallInt: 5330) ;
 	deny: (GciInterface oopIsSmallInt: 5332) ;
 	assert: (GciInterface asLocalObject: 5330) identicalTo: 666 ;
-	assert: (GciInterface asLocalObject: GciInterface OOP_CLASS_SYMBOL) identicalTo: nil .
+	assert: (GciInterface asLocalObject: GciInterface OOP_CLASS_SYMBOL) identicalTo: nil.
 ^ self
 ]
