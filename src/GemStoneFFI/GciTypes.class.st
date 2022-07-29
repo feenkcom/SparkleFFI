@@ -15,7 +15,7 @@ Class {
 
 { #category : 'class initialization' }
 GciTypes class >> initialize [
-	"GciTypes initialize"
+"GciTypes initialize"
 	OopType := #uint64 .
 	OopTypeArray10 := FFIArray newArrayTypeOf: #uint64 size: 10.
 	CharArray1025 := FFIArray newArrayTypeOf: #char size: 1025 . 
