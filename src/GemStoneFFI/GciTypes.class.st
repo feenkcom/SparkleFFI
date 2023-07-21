@@ -2,8 +2,8 @@
 A pool variable used to represent various C types used by the GCI.
 "
 Class {
-	#name : 'GciTypes',
-	#superclass : 'Object',
+	#name : #GciTypes,
+	#superclass : #Object,
 	#classVars : [
 		'BoolType',
 		'CharArray1025',
@@ -13,7 +13,7 @@ Class {
 	#category : 'GemStoneFFI'
 }
 
-{ #category : 'class initialization' }
+{ #category : #'class initialization' }
 GciTypes class >> initialize [
 "GciTypes initialize"
 	OopType := #uint64 .
