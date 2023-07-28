@@ -250,7 +250,7 @@ GciInterface class >> resetFfiMethods [
 	"Reset the FFI methods to their non-compiled form to force them to be reinitialised with the current library version"
 
 	Stdio stdout << 'GciInterface: resetFfiMethods'; lf.
-	'GemStoneFFI' asPackage classes do: [ :cls |
+	self package classes do: [ :cls |
 		cls methods do: [ :cm |
 			(cm hasProperty: #ffiNonCompiledMethod) ifTrue:
 				[ cm methodClass methodDict
