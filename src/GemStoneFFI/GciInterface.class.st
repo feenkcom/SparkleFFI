@@ -9,12 +9,14 @@ Class {
 		'gsLibraryPath'
 	],
 	#classVars : [
+		'FfiMutex',
+		'GciLastVersionUsed',
 		'GemStoneLibraryDirectory'
 	],
 	#pools : [
 		'GciTypes'
 	],
-	#category : 'GemStoneFFI'
+	#category : #GemStoneFFI
 }
 
 { #category : #constants }
@@ -150,6 +152,12 @@ GciInterface class >> gemstoneLibraryPathFromEnv [
 ^Smalltalk os environment at: self gemstoneLibraryEnvVarName  ifAbsent:[ nil ]
 ]
 
+{ #category : #initialize }
+GciInterface class >> initialize [ 
+
+	FfiMutex := Mutex new.
+]
+
 { #category : #subclassresponsibility }
 GciInterface class >> isThreadSafe [
 	^self subclassResponsibility 
@@ -237,6 +245,19 @@ GciInterface class >> oopTrue [
 	^ 268
 ]
 
+{ #category : #initialize }
+GciInterface class >> resetFfiMethods [
+	"Reset the FFI methods to their non-compiled form to force them to be reinitialised with the current library version"
+
+	Stdio stdout << 'GciInterface: resetFfiMethods'; lf.
+	'GemStoneFFI' asPackage classes do: [ :cls |
+		cls methods do: [ :cm |
+			(cm hasProperty: #ffiNonCompiledMethod) ifTrue:
+				[ cm methodClass methodDict
+					at: cm selector
+					put: (cm propertyAt: #ffiNonCompiledMethod) ] ] ].
+]
+
 { #category : #convenience }
 GciInterface class >> separator [ 
 
@@ -259,11 +280,30 @@ GciInterface class >> vmMemoryModel [
 	^Smalltalk vm is64bit ifTrue:[ 64 ] ifFalse:[ 32 ]
 ]
 
+{ #category : #private }
+GciInterface >> checkFfiLibraryVersion [
+	"Check the current library version loaded.
+	If it is different to the receiver's, reset the ffi methods."
+
+	gsVersionString = GciLastVersionUsed ifFalse:
+		[ self class resetFfiMethods.
+		GciLastVersionUsed := gsVersionString ]
+]
+
 { #category : #converting }
 GciInterface >> convertStringToExternalArgOrNull: byteString memoryTracker: tracker [
 
 "Converts a ByteString to an external address"
 ^self class convertStringToExternalArgOrNull: byteString memoryTracker: tracker
+]
+
+{ #category : #enumerating }
+GciInterface >> ffiDo: aBlock [
+	"Evaluate aBlock within the FFI mutex, ensuring that multiple processes don't simultaneously attempt to make calls with different versions"
+
+	^ FfiMutex critical:
+		[ self checkFfiLibraryVersion.
+		aBlock value ]
 ]
 
 { #category : #accessing }

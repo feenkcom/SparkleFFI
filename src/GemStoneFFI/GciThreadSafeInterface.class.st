@@ -10,7 +10,7 @@ Class {
 	#instVars : [
 		'session'
 	],
-	#category : 'GemStoneFFI'
+	#category : #GemStoneFFI
 }
 
 { #category : #constants }
@@ -66,7 +66,7 @@ To check the nonblocking call status without blocking use the method: getNbCallS
 self assertLoggedIn .
 tracker := GsMemoryTracker new.
 gsError := tracker add: GciErrSType externalNew .
-result := self gciTsNbResult: session gsError: gsError.
+result := self ffiDo: [ self gciTsNbResult: session gsError: gsError ].
 result == self class oopIllegal 
 	ifTrue:[ ^ GciError newForError: gsError tracker: tracker ].
 tracker freeAll. "No error, so done with this."
@@ -122,8 +122,7 @@ maxSize."
 	resultBuffer := tracker add:
 		                (GsExternalByteString newWithNull: maxSize).
 	gsError := tracker add: GciErrSType externalNew.
-
-	gciResult := self
+	gciResult := self ffiDo: [ self
 		             gciTsExecuteFetchBytes: session
 		             sourceString: srcCstring getHandle
 		             sourceStringSize: srcCstring sizeNoNull
@@ -132,7 +131,7 @@ maxSize."
 		             symbolList: self class oopNil
 		             resultBuffer: resultBuffer getHandle
 		             resultBufferSize: resultBuffer size
-		             gsError: gsError.
+		             gsError: gsError ].
 	self checkGciResult: gciResult gsError: gsError tracker: tracker.
 	self
 		checkSpaceForBufferSize: maxSize
@@ -173,14 +172,14 @@ tracker := GsMemoryTracker new.
 srcCstring := self convertStringToExternalArgOrNull: sourceString  memoryTracker: tracker.
 gsError := tracker add: GciErrSType externalNew .
 
-result := self gciTsNbExecute: session
+result := self ffiDo: [ self gciTsNbExecute: session
 		 sourceString: srcCstring getHandle 
 		 sourceOop: self class OOP_CLASS_STRING  
 		 contextObject: self class oopNil
 		 symbolList: self class oopNil
 		 flags: 0
 		 envId: 0
-		 gsError: gsError.
+		 gsError: gsError ].
 result ~~ 1 ifTrue:[ ^ GciError newForError: gsError tracker: tracker ].
 tracker freeAll.
 ^ true
@@ -196,14 +195,14 @@ GciThreadSafeInterface >> fetchResultByteObject: oop maxResultSize: maxSize [
 	resultBuffer := tracker add: (GsExternalByteString new: maxSize).
 	gsError := tracker add: GciErrSType externalNew.
 	objInfo := tracker add: GciTsObjInfo externalNew.
-	gciResult := self
+	gciResult := self ffiDo: [ self
 		             gciTsFetchObjInfo: session
 		             object: oop
 		             addToExportSet: 0
 		             resultInfo: objInfo
 		             resultBuffer: resultBuffer getHandle
 		             resultBufferSize: resultBuffer size
-		             gsError: gsError.
+		             gsError: gsError ].
 	self checkGciResult: gciResult gsError: gsError tracker: tracker.
 	self
 		checkSpaceForBufferSize: maxSize
@@ -328,9 +327,9 @@ GciThreadSafeInterface >> gciVersionString [
 bufSize := 128.
 tracker := GsMemoryTracker new.
 resultBuffer := tracker add: (GsExternalByteString newWithNull: bufSize).
- 
+
 "Result is the GciProduct type, which is always 3 (not interesting)."
-self gciTsVersion: resultBuffer getHandle bufferSize: bufSize.
+self ffiDo: [ self gciTsVersion: resultBuffer getHandle bufferSize: bufSize ].
 "Save result string so we can free the buffer on the C heap"
 result := resultBuffer asByteString .
 tracker freeAll.
@@ -347,7 +346,7 @@ GciThreadSafeInterface >> getNbCallStatusWithMaxDelay: delayMs [
 |tracker  result  gsError|
 tracker := GsMemoryTracker new.
 gsError := tracker add: GciErrSType externalNew .
-result := self gciTsNbPoll: session timeoutMs: delayMs gsError: gsError.
+result := self ffiDo: [ self gciTsNbPoll: session timeoutMs: delayMs gsError: gsError ].
 result == -1 
 	ifTrue:[ ^ GciError newForError: gsError tracker: tracker ].
 tracker freeAll.
@@ -386,7 +385,7 @@ exHaltOnErrNum := 0.
 exBoolPtr := FFIInt32 newBuffer .
 gsError := tracker add: GciErrSType externalNew .
 "result is a GsSession (void *)"
-result := self gciTsLoginToStone: exStnNrs getHandle
+result := self ffiDo: [ self gciTsLoginToStone: exStnNrs getHandle
 		hostUserId: exHostId  getHandle 
 		hostPassword: exHostPw  getHandle
 		hostPwIsEncrypted: exHostPwEnc  
@@ -396,7 +395,7 @@ result := self gciTsLoginToStone: exStnNrs getHandle
 		 loginFlags: exLoginFlags 
 		 haltOnErrorNum: exHaltOnErrNum 
 		 executedSessInit: exBoolPtr 
-		 err: gsError .
+		 err: gsError ].
 result isNull ifTrue:[ ^ GciError newForError: gsError tracker: tracker ].
 session := result.
 tracker freeAll.
@@ -433,7 +432,7 @@ self isLoggedIn ifFalse:[
 
 tracker := GsMemoryTracker new.
 gsError := tracker add: GciErrSType externalNew .
-result := self gciTsLogout: session gsError: gsError .
+result := self ffiDo: [ self gciTsLogout: session gsError: gsError ].
 session := nil.
 ((result == 1) or:[ noError]) ifTrue:[
 	tracker freeAll.
