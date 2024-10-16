@@ -432,7 +432,12 @@ self isLoggedIn ifFalse:[
 
 tracker := GsMemoryTracker new.
 gsError := tracker add: GciErrSType externalNew .
-result := self ffiDo: [ self gciTsLogout: session gsError: gsError ].
+
+GtGemStoneSession logMessage: DateAndTime now printString, ': [BEGIN] GciTsLogout'.
+result := self ffiDo: [ 
+	self gciTsLogout: session gsError: gsError ].
+GtGemStoneSession logMessage: DateAndTime now printString, ': [END] GciTsLogout'.
+	
 session := nil.
 ((result == 1) or:[ noError]) ifTrue:[
 	tracker freeAll.
