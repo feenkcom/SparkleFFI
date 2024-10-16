@@ -17,7 +17,7 @@ Class {
 	#classVars : [
 		'AllSessions'
 	],
-	#category : 'GemStoneFFI'
+	#category : #GemStoneFFI
 }
 
 { #category : #'Session Tracking' }
@@ -131,8 +131,8 @@ GsSession class >> initialize [
 AllSessions ifNil:[ AllSessions := IdentitySet new ].
 
 "Add startup hook to clear stale sessions."
-(SessionManager default hasRegistered: self name asString)
-  ifFalse:[ SessionManager default register: (ClassSessionHandler forClassNamed: self name asString)
+(SessionManager default hasRegistered: self name)
+  ifFalse:[ SessionManager default register: (ClassSessionHandler forClassNamed: self name)
 				inCategory: SessionManager default systemCategory.
 		].
 ]
